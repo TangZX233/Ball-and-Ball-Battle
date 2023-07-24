@@ -2,9 +2,9 @@
 #include<easyx.h>
 
 /*
+编译：VS 2022
 
-
-
+b站：https://space.bilibili.com/606516570?spm_id_from=333.1007.0.0
 */
 
 const int GridSize = 10;
@@ -29,7 +29,7 @@ void draw()
 
 int main()
 {
-	//1,图形窗口
+	//图形窗口
 	initgraph(1024, 640);
 	//颜色
 	setbkcolor(WHITE);
