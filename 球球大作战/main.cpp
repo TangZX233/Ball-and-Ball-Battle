@@ -11,7 +11,7 @@
 b站：https://space.bilibili.com/606516570?spm_id_from=333.1007.0.0
 */
 
-//宏定义
+//定义
 const int GridSize = 10;      //格子宽度
 
 //玩家、食物、AI
@@ -80,14 +80,13 @@ double sprite_distance(Sprite* spr1, Sprite* spr2)
 	return sqrt(pow(spr1->x - spr2->x, 2) + pow(spr1->y - spr2->y, 2));
 }
 
-//宏定义
+//定义
 #define FOOD_NUM 100          //食物数量
 #define AI_NUM 10             //ai数量
 Sprite gamer;                 //玩家
 Sprite foods[FOOD_NUM];       //食物
 Sprite ais[AI_NUM];           //ai
 const char* names[AI_NUM] = { "Awake","RO","wink~","aaa","bbb","ccc","ddd","eee","fff","ggg" };
-
 
 //初始化
 void init()
@@ -154,22 +153,23 @@ void draw()
 //计算球速
 double ballSpeed(double ballradius,bool isgamer = 0)
 {
+	//玩家速度
 	if (isgamer)
 	{
-		//玩家速度
-		return 20 / ballradius;
+		return 25 / ballradius;
 	}
+	//ai速度
 	else
 	{
 		for (int i = 0; i < AI_NUM; i++)
 		{
 			if (ais[i].r = 20)
 			{
-				return 20 / ballradius;
+				return 25 / ballradius;
 			}
 			else
 			{
-				return 1.2;
+				return 1.5;
 			}
 		}
 	}
@@ -228,13 +228,13 @@ void gamerAndAiEat()
 	for (int i = 0; i < AI_NUM; i++)
 	{
 		//玩家吃ai
-		if (!gamer.isDie && !ais[i].isDie && sprite_distance(&gamer, ais + i) < gamer.r && gamer.r > ais[i].r)
+		if (!gamer.isDie && !ais[i].isDie && sprite_distance(&gamer, ais + i) < gamer.r - ais[i].r && gamer.r > ais[i].r)
 		{
 			ais[i].isDie = TRUE;
 			gamer.r += ais[i].r / 8;
 		}
 		//ai吃玩家
-		if (!gamer.isDie && !ais[i].isDie && sprite_distance(&gamer, ais + i) < gamer.r && gamer.r < ais[i].r)
+		if (!gamer.isDie && !ais[i].isDie && sprite_distance(&gamer, ais + i) < ais[i].r - gamer.r && gamer.r < ais[i].r)
 		{
 			gamer.isDie = TRUE;
 			ais[i].r += gamer.r / 8;
@@ -242,7 +242,7 @@ void gamerAndAiEat()
 		//ai吃ai
 		for (int k = 0; k < AI_NUM; k++)
 		{
-			if (i != k && !ais[i].isDie && !ais[k].isDie && sprite_distance(ais + i, ais + k) < ais[i].r && ais[i].r > ais[k].r)
+			if (i != k && !ais[i].isDie && !ais[k].isDie && sprite_distance(ais + i, ais + k) < ais[i].r - ais[k].r && ais[i].r > ais[k].r)
 			{
 				ais[k].isDie = TRUE;
 				ais[i].r += ais[k].r / 8;
@@ -276,25 +276,41 @@ void chase(Sprite* run, Sprite* chase)
 //ai移动
 void aisMove()
 {
-	//找食物
 	for (int i = 0; i < AI_NUM; i++)
 	{
-	
-		if (!ais[i].isDie)
+		int m = 0;
+		for (int k = 0; k < AI_NUM; k++)
 		{
-			//判断存在
-			if (ais[i].food_index != -1 && !foods[ais[i].food_index].isDie)
+			m++;
+		}
+		//追击玩家
+		if (!ais[i].isDie && ais[i].r > gamer.r)
+		{
+			chase(&gamer, ais + i);
+		}
+		//追击ai
+		/*else if (i != m && !ais[i].isDie && !ais[m].isDie && ais[i].r > ais[m].r)
+		{
+			chase(ais + m, ais + i);
+		}*/
+		//寻找食物
+		else
+		{
+			if (!ais[i].isDie)
 			{
-				chase(foods + ais[i].food_index, ais + i);
-			}
-			//不存在，重找
-			else
-			{
-				ais[i].food_index = rand() % FOOD_NUM;
+				//判断存在
+				if (ais[i].food_index != -1 && !foods[ais[i].food_index].isDie)
+				{
+					chase(foods + ais[i].food_index, ais + i);
+				}
+				//不存在，重找
+				else
+				{
+					ais[i].food_index = rand() % FOOD_NUM;
+				}
 			}
 		}
 	}
-	
 }
 
 int main()
@@ -305,6 +321,8 @@ int main()
 	setbkcolor(WHITE);
 	cleardevice();
 	init();
+	draw();
+	Sleep(500);
 
 	//主循环
 	while (true)
@@ -314,7 +332,7 @@ int main()
 		cleardevice();
 		foodReset();
 		draw();
-		keyDownDeal();  //不断检测
+		keyDownDeal();
 		eatFood();
 		gamerAndAiEat();
 		aisMove();
@@ -322,7 +340,7 @@ int main()
 		EndBatchDraw();
 
 		//游戏结束判断
-		if (gamer.isDie)
+		if (gamer.isDie || gamer.r > 150)
 		{
 			break;
 		}
